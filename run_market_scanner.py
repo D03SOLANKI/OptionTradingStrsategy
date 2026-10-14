@@ -16,37 +16,41 @@ if sys.platform == "win32":
     sys.stderr.reconfigure(encoding="utf-8")
 
 from src.config.trading_config import MasterConfig
-from src.config.nse_symbols import NSE_FO_UNIVERSE, SymbolSpec
+from src.config.nse_symbols import NSE_FO_UNIVERSE, SymbolSpec, get_symbol_spec
 from src.data.market_data_feed import MarketDataFeed
 from src.scanner.market_scanner import MarketScanner, ScanResult
 
-def run_multi_cap_scanner(target_timestamp: str = None):
+def run_multi_cap_scanner(target_timestamp: str = None, custom_symbols: list = None):
     print("=" * 95)
     print("   NSE MULTI-CAP STOCK OPTIONS SCANNER & OPPORTUNITY RANKING ENGINE")
     print("   Unified Account Capital: ₹1,000,000.00 (10 Lakhs) | Max Risk per Trade: ₹12,000.00")
-    print("   Universe: Large-Cap, Mid-Cap, and Small-Cap Permitted NSE F&O Derivatives")
+    print("   Universe: Dynamic Multi-Cap Universe (Large, Mid, and Small Cap NSE F&O)")
     print("=" * 95)
 
     config = MasterConfig()
     scanner = MarketScanner(config, min_composite_score=55.0, min_rr=1.5, max_recommendations=3)
 
     # 1. Ingest multi-cap universe
-    print("\n[+] Ingesting intraday data across multi-cap universe...")
     feed = MarketDataFeed()
     universe_data = {}
     
-    # Select balanced representation across all three tiers
-    target_symbols = [
-        # Large Caps
-        "TCS", "RELIANCE", "ICICIBANK", "SBIN", "LT", "BHARTIARTL", "ITC", "SUNPHARMA",
-        # Mid Caps
-        "POLYCAB", "PERSISTENT", "COFORGE", "VOLTAS", "AUROPHARMA",
-        # Small / High-Beta F&O Caps
-        "BSOFT", "NATIONALUM", "RBLBANK", "IDFCFIRSTB", "CHAMBLFERT"
-    ]
+    if custom_symbols and len(custom_symbols) > 0:
+        target_symbols = [s.strip().upper() for s in custom_symbols if s.strip()]
+        print(f"\n[+] Ingesting custom user watchlist ({len(target_symbols)} stocks)...")
+    else:
+        # Default balanced representation across all three tiers
+        print("\n[+] Ingesting default multi-cap universe (Large, Mid, and Small Cap)...")
+        target_symbols = [
+            # Large Caps
+            "TCS", "RELIANCE", "ICICIBANK", "SBIN", "LT", "BHARTIARTL", "ITC", "SUNPHARMA",
+            # Mid Caps
+            "POLYCAB", "PERSISTENT", "COFORGE", "VOLTAS", "AUROPHARMA",
+            # Small / High-Beta F&O Caps
+            "BSOFT", "NATIONALUM", "RBLBANK", "IDFCFIRSTB", "CHAMBLFERT"
+        ]
 
     for sym in target_symbols:
-        spec = NSE_FO_UNIVERSE[sym]
+        spec = get_symbol_spec(sym)
         print(f"    - [{spec.cap_category:<9}] {sym:<11} | {spec.name:<30} | Lot: {spec.lot_size:>5}", end="")
         try:
             df = feed.get_stock_data(sym, period="60d", interval="15m")
@@ -146,5 +150,11 @@ def run_multi_cap_scanner(target_timestamp: str = None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="NSE Multi-Cap Options Scanner")
     parser.add_argument("--timestamp", type=str, default=None, help="Target timestamp to scan (YYYY-MM-DD HH:MM:SS)")
+    parser.add_argument("--symbols", type=str, default=None, help="Comma-separated stock symbols to scan (e.g. HDFCBANK,BAJFINANCE,MARUTI,TATAMOTORS)")
     args = parser.parse_args()
-    run_multi_cap_scanner(target_timestamp=args.timestamp)
+
+    sym_list = None
+    if args.symbols:
+        sym_list = args.symbols.split(",")
+
+    run_multi_cap_scanner(target_timestamp=args.timestamp, custom_symbols=sym_list)
