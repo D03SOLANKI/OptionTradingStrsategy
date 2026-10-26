@@ -10,16 +10,16 @@
 
 | Metric | Portfolio Value | Metric | Portfolio Value |
 | :--- | :--- | :--- | :--- |
-| **Starting Capital** | ₹1,000,000.00 | **Final Equity** | ₹562,057.61 |
-| **Net Profit** | ₹-437,942.39 | **Return on Capital** | -43.79% |
-| **Gross Profit** | ₹238,157.91 | **Gross Loss** | ₹676,100.30 |
-| **Total Indian Friction/Taxes** | ₹129,437.24 | **Profit Factor** | 0.35 |
-| **Total Closed Trades** | 120 | **Win Rate** | 44.2% |
-| **Winning Trades** | 53 | **Losing Trades** | 67 |
-| **Average Trade PnL** | ₹-3,649.52 | **Expectancy per Trade** | ₹-3,649.52 |
-| **Maximum Drawdown (₹)** | ₹446,143.56 | **Maximum Drawdown (%)** | 44.38% |
-| **Sharpe Ratio (Annualized)** | -4.41 | **Sortino Ratio** | -1.40 |
-| **Daily Trades Average** | **1.00 trades / day** | **Avg Concurrent Positions** | **0.61** |
+| **Starting Capital** | ₹1,000,000.00 | **Final Equity** | ₹758,589.94 |
+| **Net Profit** | ₹-241,410.06 | **Return on Capital** | -24.14% |
+| **Gross Profit** | ₹212,916.31 | **Gross Loss** | ₹454,326.37 |
+| **Total Indian Friction/Taxes** | ₹49,095.50 | **Profit Factor** | 0.47 |
+| **Total Closed Trades** | 73 | **Win Rate** | 48.0% |
+| **Winning Trades** | 35 | **Losing Trades** | 38 |
+| **Average Trade PnL** | ₹-3,306.99 | **Expectancy per Trade** | ₹-3,306.99 |
+| **Maximum Drawdown (₹)** | ₹246,582.32 | **Maximum Drawdown (%)** | 24.53% |
+| **Sharpe Ratio (Annualized)** | -3.08 | **Sortino Ratio** | -0.87 |
+| **Daily Trades Average** | **0.61 trades / day** | **Avg Concurrent Positions** | **0.42** |
 
 ---
 
@@ -31,9 +31,9 @@
 | **2024-02** | ₹1,000,000.00 | ₹908,032.99 | **₹-91,967.01** | **-9.20%** |
 | **2024-03** | ₹908,032.99 | ₹912,853.60 | **₹4,820.61** | **+0.53%** |
 | **2026-07** | ₹912,853.60 | ₹912,853.60 | **₹0.00** | **+0.00%** |
-| **2026-08** | ₹912,853.60 | ₹848,035.27 | **₹-64,818.33** | **-7.10%** |
-| **2026-09** | ₹851,641.36 | ₹617,725.63 | **₹-233,915.73** | **-27.47%** |
-| **2026-10** | ₹624,097.76 | ₹578,537.32 | **₹-45,560.44** | **-7.30%** |
+| **2026-08** | ₹912,853.60 | ₹922,992.85 | **₹10,139.25** | **+1.11%** |
+| **2026-09** | ₹925,209.96 | ₹835,277.01 | **₹-89,932.95** | **-9.72%** |
+| **2026-10** | ₹835,277.01 | ₹758,589.94 | **₹-76,687.07** | **-9.18%** |
 
 ---
 
@@ -41,16 +41,16 @@
 
 | Symbol | Sector | Lot Size | Trades | Wins | Win Rate (%) | Net PnL (₹) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **TCS** | Information Technology | 175 | 9 | 4 | 44.4% | ₹-5,247.30 |
-| **ICICIBANK** | Banking & Financial Services | 700 | 7 | 5 | 71.4% | ₹-5,028.32 |
-| **SBIN** | Banking & Financial Services | 750 | 19 | 8 | 42.1% | ₹-72,158.01 |
-| **RELIANCE** | Energy / Conglomerate | 250 | 11 | 3 | 27.3% | ₹-77,615.07 |
+| **TCS** | Information Technology | 175 | 5 | 3 | 60.0% | ₹12,096.35 |
+| **ICICIBANK** | Banking & Financial Services | 700 | 3 | 2 | 66.7% | ₹23,400.73 |
+| **SBIN** | Banking & Financial Services | 750 | 9 | 3 | 33.3% | ₹-57,876.52 |
+| **RELIANCE** | Energy / Conglomerate | 250 | 9 | 3 | 33.3% | ₹-64,403.24 |
 | **TATAMOTORS** | Automobile | 700 | 16 | 8 | 50.0% | ₹-87,146.40 |
-| **BHARTIARTL** | Telecom | 475 | 6 | 2 | 33.3% | ₹-44,596.63 |
-| **ITC** | FMCG / Consumption | 1600 | 21 | 8 | 38.1% | ₹-87,597.29 |
-| **LT** | Infrastructure | 175 | 10 | 5 | 50.0% | ₹-12,899.10 |
-| **TATASTEEL** | Metals & Mining | 5500 | 12 | 6 | 50.0% | ₹-14,851.98 |
-| **SUNPHARMA** | Healthcare & Pharma | 700 | 9 | 4 | 44.4% | ₹-30,802.29 |
+| **BHARTIARTL** | Telecom | 475 | 2 | 0 | 0.0% | ₹-30,948.42 |
+| **ITC** | FMCG / Consumption | 1600 | 6 | 2 | 33.3% | ₹-19,735.43 |
+| **LT** | Infrastructure | 175 | 6 | 2 | 33.3% | ₹-50,365.31 |
+| **TATASTEEL** | Metals & Mining | 5500 | 8 | 6 | 75.0% | ₹11,489.43 |
+| **SUNPHARMA** | Healthcare & Pharma | 700 | 9 | 6 | 66.7% | ₹22,078.75 |
 
 ---
 
@@ -58,22 +58,22 @@
 
 | Sector | Total Trades Taken | Aggregate Net PnL (₹) |
 | :--- | :--- | :--- |
-| **Information Technology** | 9 | ₹-5,247.30 |
-| **Banking & Financial Services** | 26 | ₹-77,186.33 |
-| **Energy / Conglomerate** | 11 | ₹-77,615.07 |
+| **Information Technology** | 5 | ₹12,096.35 |
+| **Banking & Financial Services** | 12 | ₹-34,475.79 |
+| **Energy / Conglomerate** | 9 | ₹-64,403.24 |
 | **Automobile** | 16 | ₹-87,146.40 |
-| **Telecom** | 6 | ₹-44,596.63 |
-| **FMCG / Consumption** | 21 | ₹-87,597.29 |
-| **Infrastructure** | 10 | ₹-12,899.10 |
-| **Metals & Mining** | 12 | ₹-14,851.98 |
-| **Healthcare & Pharma** | 9 | ₹-30,802.29 |
+| **Telecom** | 2 | ₹-30,948.42 |
+| **FMCG / Consumption** | 6 | ₹-19,735.43 |
+| **Infrastructure** | 6 | ₹-50,365.31 |
+| **Metals & Mining** | 8 | ₹11,489.43 |
+| **Healthcare & Pharma** | 9 | ₹22,078.75 |
 
 ---
 
 ## 5. Practical Answers for the 10-Stock Portfolio (₹10 Lakhs)
 
 ### A. How Many Trades Does It Place in a Day?
-- **Average Frequency**: Across all 10 stocks, the portfolio places an average of **1.00 trades per day** (about **7 to 10 trades per week**).
+- **Average Frequency**: Across all 10 stocks, the portfolio places an average of **0.61 trades per day** (about **7 to 10 trades per week**).
 - **Concurrency**: On average, the portfolio holds **1 to 2 active positions**, with a hard ceiling of **3 simultaneous positions** enforced by the risk manager.
 - **Zero Overtrading**: On quiet consolidation days without 4H confluence, the portfolio places **0 trades** and preserves capital.
 

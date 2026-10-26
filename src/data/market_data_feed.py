@@ -9,7 +9,7 @@ import math
 import numpy as np
 import pandas as pd
 from datetime import datetime, date, timedelta, time
-from typing import Optional, Dict, Tuple, List, Literal
+from typing import Optional, Dict, Tuple, List, Literal, Any, Callable
 
 from src.config.nse_symbols import get_symbol_spec
 from src.config.constants import MARKET_TIMEZONE
@@ -39,29 +39,46 @@ class MarketDataFeed:
         ticker_str = spec.yf_ticker
         cache_file = os.path.join(self.cache_dir, f"{spec.symbol}_{period}_{interval}.parquet")
 
+        import time as time_mod
+        # Check cache validity with TTL (45 mins during live market hours)
         if not force_reload and os.path.exists(cache_file):
+            try:
+                mtime = os.path.getmtime(cache_file)
+                age_sec = time_mod.time() - mtime
+                if age_sec < 2700:  # Fresh within 45 minutes
+                    df = pd.read_parquet(cache_file)
+                    if not df.empty and len(df) >= 30:
+                        return self._clean_and_enrich(df)
+            except Exception:
+                pass
+
+        try:
+            ticker = yf.Ticker(ticker_str)
+            df = ticker.history(period=period, interval=interval)
+            if not df.empty and len(df) >= 10:
+                # Standardize column names
+                df = df[["Open", "High", "Low", "Close", "Volume"]].copy()
+                df.index = pd.to_datetime(df.index)
+
+                # Convert timezone to IST Asia/Kolkata
+                if df.index.tz is None:
+                    df.index = df.index.tz_localize("UTC").tz_convert(MARKET_TIMEZONE)
+                else:
+                    df.index = df.index.tz_convert(MARKET_TIMEZONE)
+
+                # Save fresh data to cache
+                df.to_parquet(cache_file)
+                return self._clean_and_enrich(df)
+        except Exception:
+            pass
+
+        # Graceful fallback: return existing cached data if live fetch hit a network hiccup
+        if os.path.exists(cache_file):
             df = pd.read_parquet(cache_file)
-            return self._clean_and_enrich(df)
+            if not df.empty:
+                return self._clean_and_enrich(df)
 
-        ticker = yf.Ticker(ticker_str)
-        df = ticker.history(period=period, interval=interval)
-
-        if df.empty:
-            raise ValueError(f"No data returned for ticker {ticker_str} (period={period}, interval={interval}).")
-
-        # Standardize column names
-        df = df[["Open", "High", "Low", "Close", "Volume"]].copy()
-        df.index = pd.to_datetime(df.index)
-
-        # Convert timezone to IST Asia/Kolkata
-        if df.index.tz is None:
-            df.index = df.index.tz_localize("UTC").tz_convert(MARKET_TIMEZONE)
-        else:
-            df.index = df.index.tz_convert(MARKET_TIMEZONE)
-
-        # Save to cache
-        df.to_parquet(cache_file)
-        return self._clean_and_enrich(df)
+        raise ValueError(f"No data returned for ticker {ticker_str} (period={period}, interval={interval}).")
 
     def get_stock_data(
         self,
@@ -92,6 +109,42 @@ class MarketDataFeed:
                 num_days=60,
                 regime="MULTI_REGIME"
             )
+
+    def get_batch_stock_data(
+        self,
+        symbols: List[str],
+        period: str = "60d",
+        interval: str = "15m",
+        max_workers: int = 16,
+        force_reload: bool = False,
+        progress_callback: Optional[Any] = None
+    ) -> Dict[str, pd.DataFrame]:
+        """
+        High-performance concurrent multi-threaded ingestion for hundreds of stocks in seconds.
+        """
+        import concurrent.futures
+        results: Dict[str, pd.DataFrame] = {}
+        total = len(symbols)
+        completed = 0
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_sym = {
+                executor.submit(self.get_stock_data, sym, period, interval, force_reload): sym
+                for sym in symbols
+            }
+            for future in concurrent.futures.as_completed(future_to_sym):
+                sym = future_to_sym[future]
+                completed += 1
+                try:
+                    df = future.result()
+                    if df is not None and not df.empty and len(df) >= 60:
+                        results[sym] = df
+                except Exception:
+                    pass
+                if progress_callback:
+                    progress_callback(completed, total, sym)
+
+        return results
 
     def generate_synthetic_regime_data(
         self,

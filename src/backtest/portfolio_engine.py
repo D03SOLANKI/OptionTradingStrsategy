@@ -24,6 +24,7 @@ from src.risk.risk_manager import RiskManager
 from src.risk.cost_calculator import CostCalculator
 from src.backtest.position import OptionPosition
 from src.reporting.performance_metrics import PerformanceMetrics, PerformanceScorecard
+from src.scanner.opportunity_ranker import OpportunityRanker, OpportunityCandidate
 
 @dataclass
 class PortfolioBacktestResult:
@@ -55,6 +56,7 @@ class PortfolioEngine:
         self.risk_manager.config.max_simultaneous_positions = max_concurrent_positions
         self.risk_manager.config.max_sector_concentration = max_sector_limit
         self.cost_calculator = CostCalculator(config.risk)
+        self.ranker = OpportunityRanker(config, min_composite_score=55.0, min_rr=1.5)
 
     def run_portfolio(
         self,
@@ -202,12 +204,31 @@ class PortfolioEngine:
                     )
 
                     if sig is not None and sig.action in ["BUY_CE", "BUY_PE"] and sig.option_contract is not None:
-                        candidate_signals.append((sig.confidence_score, sig))
+                        # Institutional Opportunity Ranking & Quality Filter
+                        market_struct = self.strategy.sr_4h_engine.analyze_market_structure(
+                            df_4h_visible=visible_4h,
+                            current_time=current_time,
+                            current_spot=spot_close
+                        )
+                        cand = self.ranker.evaluate_candidate(
+                            symbol=sym,
+                            spot_price=spot_close,
+                            action=sig.action,
+                            sr_zone=sig.confluence_zone,
+                            market_structure=market_struct,
+                            reversal=sig.reversal_signal,
+                            contract=sig.option_contract,
+                            current_atr_15m=current_atr,
+                            available_cash=current_cash,
+                            max_risk_inr=self.config.risk.max_risk_per_trade_pct * self.config.risk.initial_capital
+                        )
+                        if cand.is_selected:
+                            candidate_signals.append((cand.composite_score, sig, cand))
 
-                # Rank candidate signals by confidence score (highest quality first)
+                # Rank candidate signals by composite score (highest institutional quality first)
                 candidate_signals.sort(key=lambda x: x[0], reverse=True)
 
-                for _, sig in candidate_signals:
+                for _, sig, cand in candidate_signals:
                     if len(open_positions) >= self.max_concurrent_positions:
                         break
 

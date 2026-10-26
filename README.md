@@ -1,116 +1,170 @@
-# Automated Stock Options Trading Strategy: Multi-Timeframe Support & Resistance (4H & 15M)
+# Multi-Agent Institutional AI Stock Trading System (NSE Cash Market)
 
-Institutional-grade, systematic, automated stock options trading strategy built on Multi-Timeframe (MTF) Support and Resistance analysis, dynamic trailing stop-loss protection, intelligent position averaging, strict risk management, and Indian National Stock Exchange (NSE) regulatory tax & cost models.
-
-Strictly adheres to:
-- **Zero Look-Ahead Bias**: 4H bars are session-aware and only visible after closing; swing pivots enforce strict confirmation lags.
-- **No Overfitting**: Walk-forward analysis with purging/embargoing, Monte Carlo bootstrap simulations, and parameter stability grids.
-- **No Hardcoding**: Dynamic S/R clustering, ATR-based zones, and market-calibrated Black-Scholes Greeks.
-- **Real Indian Market F&O Constraints**: Flat brokerage, STT, exchange turnover fees, GST, SEBI charges, stamp duty, lot sizing, and slippage.
+A production-grade, systematic, multi-agent algorithmic trading system engineered for the **Indian National Stock Exchange (NSE)** Cash Equities market. The platform covers the entire **NIFTY 500** universe (520 liquid equities across Large-Cap, Mid-Cap, and Small-Cap tiers) using **Multi-Timeframe (MTF) Support & Resistance (4H & 15M)** confluence, deterministic candlestick reversal confirmation, institutional risk modeling, and a real-time Streamlit dashboard.
 
 ---
 
-## Architecture Overview
+## 🏛️ System Architecture: 5 Specialized Autonomous Agents
+
+The system operates on an asynchronous event-driven architecture where five specialized agents analyze market data through an immutable audit trail (`TransparencyBus`):
+
+```
+                                  [ NIFTY 500 Universe (520 Stocks) ]
+                                                   │
+                                                   ▼
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 1. Market & Stock Scanning Agent (MarketScanningAgent)                                                 │
+│    • Multi-threaded asynchronous ingestion (ThreadPoolExecutor with 45-min TTL caching)               │
+│    • Evaluates session volume, liquidity, volatility (ATR), and price alignment                        │
+└──────────────────────────────────────────────────┬─────────────────────────────────────────────────────┘
+                                                   │
+                                                   ▼
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 2. Support & Resistance Agent (SupportResistanceAgent)                                                │
+│    • 4-Hour (4H) session-aware structural swing detection (Zero look-ahead bias)                       │
+│    • ATR-based density clustering into institutional S/R zones with dynamic touch/rejection scoring    │
+│    • 15-Minute (15M) local swing detection and MTF zone confluence check (≤ 0.60% distance)           │
+└──────────────────────────────────────────────────┬─────────────────────────────────────────────────────┘
+                                                   │
+                                                   ▼
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 3. Technical Analysis Agent (TechnicalAnalysisAgent)                                                   │
+│    • Point-in-time candlestick reversal confirmation (Hammer, Engulfing, Morning/Evening Star)        │
+│    • RSI dynamic momentum filter & volume expansion validation (≥ 1.25x 20-period SMA)                 │
+└──────────────────────────────────────────────────┬─────────────────────────────────────────────────────┘
+                                                   │
+                                                   ▼
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 4. Risk Management Agent (RiskManagementAgent)                                                         │
+│    • Fixed fractional risk model (1.0% NAV risk per trade)                                             │
+│    • Position sizing decoupled from capital depletion (ranks purely by setup quality)                  │
+│    • Enforces minimum Risk-to-Reward ratio (R:R ≥ 1.50) and sector concentration limits                │
+└──────────────────────────────────────────────────┬─────────────────────────────────────────────────────┘
+                                                   │
+                                                   ▼
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 5. Decision & Validation Agent (DecisionValidationAgent)                                               │
+│    • Synthesizes confidence scores across all 5 agents                                                 │
+│    • Maximum 5 high-conviction trades per day (quality over quantity; 0 if criteria not met)           │
+│    • Classifies execution mode: Cash Delivery (CNC) for BUY, Intraday Short (MIS) for SELL            │
+└──────────────────────────────────────────────────┬─────────────────────────────────────────────────────┘
+                                                   │
+                                                   ▼
+                       [ Streamlit Live Dashboard & Multi-Agent Audit Log ]
+```
+
+---
+
+## ⚡ Key Highlights
+
+- **100% Cash Equities (Zero Options/Greeks)**: Eliminates options time decay (theta) and IV crush. Executes pure equity trades in full compliance with SEBI cash market guidelines:
+  - **BUY Orders**: Cash Delivery (`CNC`) holding for swing targets.
+  - **SELL Orders**: Intraday Short (`MIS`) with mandatory 3:15 PM auto-square-off.
+- **Full NIFTY 500 Universe**: 520 officially mapped NSE equities:
+  - **Large-Cap**: 104 benchmark stocks (NIFTY 50, NIFTY Next 50)
+  - **Mid-Cap**: 153 high-growth stocks (NIFTY Midcap 150)
+  - **Small-Cap**: 263 high-momentum stocks (NIFTY Smallcap 250)
+- **High-Speed Ingestion & Live TTL Caching**: Multi-threaded batch ingestion using `ThreadPoolExecutor(max_workers=16)` with a 45-minute live cache invalidation window to prevent stale data while maintaining fast response times.
+- **Top 5 Quality-First Trade Sizing**: Decoupled from cash balance constraints so every stock is evaluated strictly on merit. At most 5 highest-confidence candidates ($R:R \ge 1.50$, confidence $\ge 60\%$) are selected daily.
+- **Zero Black-Box Transparency**: Every decision, rejection reason, S/R zone touch, and R:R calculation is logged to an immutable audit matrix accessible via the dashboard.
+
+---
+
+## 📁 Repository Structure
 
 ```
 OptionTradingStrategy/
+├── app_dashboard.py                    # Streamlit Live Interactive Control Panel & Visualizer
+├── main_multi_agent.py                 # Multi-Agent Pipeline CLI entry point
+├── scan_sr_zones.py                    # Multi-cap S/R zone scanner with custom watchlists
+├── run_cash_multiagent_backtest.py     # End-to-end historical portfolio backtest engine
 ├── src/
+│   ├── agents/
+│   │   ├── base_agent.py               # Abstract base class & event messaging protocols
+│   │   ├── market_scanning_agent.py    # Agent 1: Universe filtering & liquidity screening
+│   │   ├── support_resistance_agent.py # Agent 2: 4H & 15M S/R clustering and MTF confluence
+│   │   ├── technical_analysis_agent.py # Agent 3: Candlestick patterns, RSI, and volume surge
+│   │   ├── risk_management_agent.py    # Agent 4: Position sizing, SL/Target, R:R calculation
+│   │   ├── decision_validation_agent.py# Agent 5: Synthesis, ranking (Top ≤ 5), & trade emission
+│   │   ├── orchestrator.py             # Multi-agent workflow pipeline coordinator
+│   │   └── transparency_bus.py         # Thread-safe pub/sub audit log & event bus
 │   ├── config/
-│   │   ├── constants.py          # NSE session hours (09:15-15:30 IST), tick size, taxes
-│   │   ├── nse_symbols.py        # F&O contract specifications, lot sizes, strike steps
-│   │   └── trading_config.py     # Strongly typed dataclasses for all hyperparameters
+│   │   ├── constants.py                # NSE market hours (09:15-15:30 IST), lot sizes, tick sizes
+│   │   ├── nse_symbols.py              # Full 520 NIFTY 500 symbols mapped by market cap
+│   │   └── trading_config.py           # Strongly typed configuration dataclasses
+│   ├── cost/
+│   │   └── cash_cost_calculator.py     # Indian SEBI/NSE cash equity friction (Brokerage, STT, GST, SEBI)
 │   ├── data/
-│   │   ├── timeframe_manager.py  # Session-aware 15M -> 4H resampler with point-in-time visibility
-│   │   └── market_data_feed.py   # Yahoo Finance real NSE fetcher & multi-regime generator
+│   │   ├── market_data_feed.py         # Multi-threaded Yahoo Finance feed with 45-min TTL cache
+│   │   └── timeframe_manager.py        # Session-aware 15M to 4H resampling (zero lookahead)
 │   ├── indicators/
-│   │   ├── swing_detector.py     # Point-in-time Swing High/Low with lag confirmation
-│   │   ├── support_resistance_4h.py # 4H Major Market Structure, S/R clustering & strength scoring
-│   │   ├── support_resistance_15m.py# 15M S/R and MTF confluence evaluator
-│   │   └── reversal_confirmation.py# Candlestick patterns (Hammer, Engulfing, etc.), RSI, volume
-│   ├── options/
-│   │   ├── pricing_engine.py     # Black-Scholes-Merton model, Greeks, and IV solver
-│   │   └── strike_selector.py    # NSE monthly expiry calendar & dynamic ATM/ITM/OTM strike selection
-│   ├── strategy/
-│   │   ├── mtf_sr_strategy.py    # Master strategy orchestrator (CE/PE signal generation)
-│   │   ├── intelligent_averaging.py # Thesis invalidation check, fresh reversal requirement
-│   │   └── trailing_stop_manager.py# Monotonic ratcheting trailing stop & partial profit taking
-│   ├── risk/
-│   │   ├── risk_manager.py       # Position sizing, daily drawdown circuit breaker, consecutive loss pauses
-│   │   └── cost_calculator.py    # Complete Indian NSE options taxation & brokerage model
+│   │   ├── swing_detector.py           # Structural swing highs/lows with confirmation lags
+│   │   ├── support_resistance_4h.py    # 4H S/R zone clustering & scoring
+│   │   ├── support_resistance_15m.py   # 15M S/R zone detection
+│   │   └── reversal_confirmation.py   # Bullish/bearish reversal pattern recognition
 │   ├── backtest/
-│   │   ├── engine.py             # Event-driven chronological simulation engine
-│   │   └── position.py           # Position lifecycle, tranches, MFE/MAE excursions
-│   ├── validation/
-│   │   ├── baseline_comparison.py# With-averaging vs Single-entry baseline head-to-head comparison
-│   │   ├── walk_forward.py       # Purged chronological Walk-Forward Analysis (WFA)
-│   │   ├── monte_carlo.py        # Bootstrap trade resampling (1,500 iterations)
-│   │   └── sensitivity.py        # Multi-parameter fragility & robustness grids
+│   │   └── cash_portfolio_engine.py    # Cash portfolio simulation engine with MFE/MAE tracking
 │   └── reporting/
-│       ├── performance_metrics.py# Comprehensive scorecard (PnL, Sharpe, Sortino, Drawdown)
-│       ├── visualizer.py         # Publication-quality charts (Equity, Drawdown, MFE/MAE)
-│       └── report_generator.py   # Markdown & CSV trade log generator
-├── tests/                        # 100% passing test suite for pricing, S/R, and zero lookahead
-├── results/                      # Audit reports, trade logs, and performance plots
-├── main.py                       # CLI execution entry point
-└── requirements.txt
+│       ├── performance_metrics.py      # Sharpe, Sortino, Calmar, Win Rate, Max Drawdown
+│       └── agent_dashboard_generator.py# HTML & Markdown transparency report generator
+├── tests/
+│   └── test_multi_agent_system.py      # Multi-agent unit tests (100% pass)
+└── requirements.txt                    # Project dependencies
 ```
 
 ---
 
-## Key Strategy Mechanics
+## 🚀 Getting Started
 
-### 1. Multi-Timeframe S/R & Confluence
-- **4-Hour Major Structure**: Analyzes major swing highs and lows confirmed point-in-time. Clusters price levels within $0.8\%$ tolerance into S/R zones. Calculates a normalized strength score $[0.0, 1.0]$ based on:
-  $$\text{Score} = 0.35 \cdot S_{\text{touches}} + 0.25 \cdot e^{-\lambda \Delta t} + 0.20 \cdot S_{\text{rejection\_wicks}} + 0.20 \cdot S_{\text{volume}} - P_{\text{breakdown}}$$
-- **15-Minute Entry Confirmation**: Detects short-term S/R levels. Identifies confluence where 15M and 4H levels overlap within $0.6\%$ price distance.
-- **Directional Triggers**:
-  - **Buy CE**: Underlying tests qualified Support + Confirmed Bullish Reversal (Hammer, Bullish Engulfing, Morning Star, Piercing line) + RSI hook + Volume surge.
-  - **Buy PE**: Underlying tests qualified Resistance + Confirmed Bearish Reversal (Shooting Star, Bearish Engulfing, Evening Star) + RSI hook + Volume surge.
+### 1. Installation
+Clone the repository and install dependencies:
+```bash
+git clone https://github.com/D03SOLANKI/OptionTradingStrsategy.git
+cd OptionTradingStrsategy
+pip install -r requirements.txt
+```
 
-### 2. Automated Profit Booking & Dynamic Trailing Stop
-- **Monotonicity Rule**: Active stop-loss can NEVER be loosened.
-- **Profit Activation**: Trailing stop is activated when option premium gains $\ge +18\%$.
-- **Ratcheting Trail**: Trails $12\%$ behind peak premium reached.
-- **Partial Profit**: At $1:2$ Risk-to-Reward ratio, books $50\%$ of the position and moves remaining stop to Breakeven $+ 1\text{ tick}$, locking in a risk-free runner.
+### 2. Launch the Streamlit Live Dashboard
+```bash
+streamlit run app_dashboard.py
+```
+Open `http://localhost:8501` to access:
+- **Multi-Cap S/R Scanner**: Interactive scanner for Large-Cap, Mid-Cap, Small-Cap, or custom watchlists.
+- **5-Agent Live Pipeline**: End-to-end multi-agent pipeline with real-time logs and decision matrix.
+- **Cash Backtest & Analytics**: Historical performance analysis, equity curve, and PnL distributions.
+- **Transparency Event Logs**: Full audit trail of every agent-to-agent message and decision rationale.
 
-### 3. Intelligent Position Averaging
-- **Thesis Invalidation**: If underlying breaches the support zone by more than $0.75 \times \text{ATR}$, the trade is invalidated. **Averaging is strictly forbidden** and stop-loss is taken.
-- **Fresh Confirmation Required**: Averaging is only triggered if a brand new 15M reversal confirmation candle closes at the deeper structural level.
-- **Mathematical Recalibration**: Recalculates weighted-average entry price, combined risk, and combined trailing stop.
-- **Baseline Audit**: Tested head-to-head against a single-entry baseline. Retained only when it improves risk-adjusted return without creating unacceptable drawdowns.
+### 3. Run Multi-Agent Analysis from CLI
+```bash
+# Analyze a custom basket of stocks
+python main_multi_agent.py --symbols RELIANCE TCS INFY HDFCBANK ICICIBANK --capital 500000
 
-### 4. Realistic Indian Market Options Cost Model
-Includes all regulatory friction per executed trade:
-- **Brokerage**: ₹20.00 flat per order
-- **Securities Transaction Tax (STT)**: $0.10\%$ on sell side option premium turnover
-- **Exchange Turnover Charges**: $0.05\%$ on premium turnover
-- **GST**: $18\%$ on (Brokerage + Exchange Charges)
-- **SEBI Charges**: ₹10 per crore ($0.0001\%$)
-- **Stamp Duty**: $0.003\%$ on buy side turnover
-- **Slippage**: Configurable ticks ($2 \text{ ticks} = ₹0.10$ per share round-trip)
+# Scan all Large-Cap stocks at Support / Resistance zones
+python scan_sr_zones.py --category large_cap --proximity 0.015
+```
+
+### 4. Run Test Suite
+```bash
+python -m pytest tests/test_multi_agent_system.py -v
+```
 
 ---
 
-## Installation & Running
+## 📊 Indian Regulatory Cost Model (Cash Equities)
 
-### 1. Run Unit Tests
-```bash
-python -m pytest tests/ -v
-```
+The system accurately simulates all statutory friction per executed trade under NSE / SEBI rules:
+- **Brokerage**: ₹20.00 or 0.05% per order (whichever is lower)
+- **Securities Transaction Tax (STT)**: 0.10% on Delivery (Buy & Sell); 0.025% on Intraday Sell
+- **Exchange Turnover Charges**: 0.00345%
+- **GST**: 18% on (Brokerage + Exchange Charges)
+- **SEBI Charges**: ₹10 per crore (0.0001%)
+- **Stamp Duty**: 0.015% on Buy side
+- **Slippage**: Configurable ticks model (default: 1 tick = ₹0.05 per share)
 
-### 2. Execute Full Audit on Real NSE Stock (e.g. TCS)
-```bash
-python main.py --symbol TCS --mode full --output-dir results/tcs
-```
+---
 
-### 3. Execute on RELIANCE
-```bash
-python main.py --symbol RELIANCE --mode full --output-dir results/reliance
-```
+## 🛡️ License & Disclaimer
 
-### 4. Command Line Arguments
-- `--symbol`: NSE ticker (e.g., `RELIANCE`, `TCS`, `INFY`, `HDFCBANK`, `ICICIBANK`)
-- `--mode`: `full` (All validations), `compare` (Baseline vs Averaging), `wfa` (Walk-Forward), `sensitivity` (Robustness grid)
-- `--capital`: Starting capital in INR (default: `500000.0`)
-- `--no-averaging`: Disables averaging to run pure single-entry mode
-- `--output-dir`: Output directory for reports and charts
+This project is licensed under the MIT License.
+
+**Disclaimer**: *This software is intended for educational, research, and algorithmic strategy development purposes only. Trading in the Indian stock market involves substantial financial risk. None of the automated signals or agent recommendations constitute direct investment advice. Always test thoroughly in simulation before deploying real capital.*
